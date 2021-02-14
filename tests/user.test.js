@@ -1,32 +1,17 @@
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
 const request = require("supertest");
 const app = require("../src/app");
 const User = require("../src/models/user");
+const {
+  userOneId,
+  userOne,
+  setupDatabase,
+  teardownDatabase,
+} = require("./fixtures/db");
 
 describe("user", () => {
-  const userOneId = new mongoose.Types.ObjectId();
+  beforeEach(setupDatabase);
 
-  const userOne = {
-    _id: userOneId,
-    name: "Mike",
-    email: "mike@example.com",
-    password: "56what!!",
-    tokens: [
-      {
-        token: jwt.sign({ _id: userOneId }, process.env.JWT_SECRET),
-      },
-    ],
-  };
-
-  beforeEach(async () => {
-    await User.deleteMany();
-    await new User(userOne).save();
-  });
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-  });
+  afterAll(teardownDatabase);
 
   it("Should signup a new user", async () => {
     const userParams = {
