@@ -29,27 +29,44 @@ describe("user", () => {
   });
 
   it("Should signup a new user", async () => {
-    await request(app)
+    const userParams = {
+      name: "Andrew",
+      email: "andrew@example.com",
+      password: "MyPass777!",
+    };
+    const response = await request(app)
       .post("/users")
-      .send({
-        name: "Andrew",
-        email: "andrew@example.com",
-        password: "MyPass777!",
-      })
+      .send(userParams)
       .expect(201);
+
+    const user = await User.findById(response.body.user._id);
+    expect(user).not.toBeNull();
+
+    expect(response.body).toMatchObject({
+      user: {
+        name: userParams.name,
+        email: userParams.email,
+      },
+      token: user.tokens[0].token,
+    });
+
+    expect(user.password).not.toBe(userParams.password);
   });
 
   it("Should login exsiting user", async () => {
-    await request(app)
+    const response = await request(app)
       .post("/users/login")
       .send({
         email: userOne.email,
         password: userOne.password,
       })
       .expect(200);
+
+    const user = await User.findById(response.body.user._id);
+    expect(response.body.token).toBe(user.tokens[1].token);
   });
 
-  it("Should login nonexistent user", async () => {
+  it("Should not login nonexistent user", async () => {
     await request(app)
       .post("/users/login")
       .send({
